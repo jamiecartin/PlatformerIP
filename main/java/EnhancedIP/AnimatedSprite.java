@@ -1,4 +1,4 @@
-package yourgamepackage;
+package EnhancedIP;
 
 import javax.imageio.ImageIO;
 import java.awt.Image;
