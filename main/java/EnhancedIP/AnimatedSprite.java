@@ -1,4 +1,3 @@
-// AnimatedSprite.java
 package yourgamepackage;
 
 import javax.imageio.ImageIO;
