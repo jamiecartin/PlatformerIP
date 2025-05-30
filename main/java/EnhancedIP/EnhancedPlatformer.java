@@ -53,17 +53,27 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
     }
     
     private void loadImages() {
-        try {
-            // Simple colored rectangles - replace with actual images in a real game
-            playerImage = createColoredImage(Color.RED, PLAYER_SIZE, PLAYER_SIZE);
-            enemyImage = createColoredImage(Color.BLACK, PLAYER_SIZE, PLAYER_SIZE);
-            coinImage = createColoredImage(Color.YELLOW, 20, 20);
-            goalImage = createColoredImage(Color.MAGENTA, 40, 60);
-            platformImage = createColoredImage(new Color(34, 139, 34), 100, 20); // Forest green
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    try {
+        // Replace these with your actual image files
+        playerImage = ImageIO.read(getClass().getResource("/sprites/player.png"));
+        enemyImage = ImageIO.read(getClass().getResource("/sprites/enemy.png"));
+        coinImage = ImageIO.read(getClass().getResource("/sprites/coin.png"));
+        goalImage = ImageIO.read(getClass().getResource("/sprites/goal.png"));
+        platformImage = ImageIO.read(getClass().getResource("/sprites/platform.png"));
+        
+        // Scale images if needed
+        playerImage = playerImage.getScaledInstance(PLAYER_SIZE, PLAYER_SIZE, Image.SCALE_SMOOTH);
+        coinImage = coinImage.getScaledInstance(20, 20, Image.SCALE_SMOOTH);
+    } catch (IOException e) {
+        e.printStackTrace();
+        // Fallback to colored rectangles if images fail to load
+        playerImage = createColoredImage(Color.RED, PLAYER_SIZE, PLAYER_SIZE);
+        enemyImage = createColoredImage(Color.BLACK, PLAYER_SIZE, PLAYER_SIZE);
+        coinImage = createColoredImage(Color.YELLOW, 20, 20);
+        goalImage = createColoredImage(Color.MAGENTA, 40, 60);
+        platformImage = createColoredImage(new Color(34, 139, 34), 100, 20);
     }
+}
     
     private Image createColoredImage(Color color, int width, int height) {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
