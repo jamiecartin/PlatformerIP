@@ -1,4 +1,4 @@
-package yourgamepackage.gameobjects;
+package EnhancedIP.gameobjects;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
