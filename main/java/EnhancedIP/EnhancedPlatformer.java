@@ -1,16 +1,19 @@
+package EnhancedIP;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
-import java.util.Random;
+import javax.imageio.ImageIO;
+import java.io.IOException;
 import javax.sound.sampled.*;
-import java.io.*;
+import java.io.File;
 
 public class EnhancedPlatformer extends JPanel implements ActionListener, KeyListener {
     // Game constants
     private static final int WIDTH = 800;
     private static final int HEIGHT = 600;
-    private static final int PLAYER_SIZE = 40;
+    private static final int PLAYER_SIZE = 32;
     private static final int GRAVITY = 1;
     private static final int JUMP_STRENGTH = 15;
     private static final int MOVE_SPEED = 5;
@@ -38,10 +41,8 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
         addKeyListener(this);
         setFocusable(true);
         
-        // Load images
+        // Load resources
         loadImages();
-        
-        // Load sounds
         loadSounds();
         
         // Initialize game objects
@@ -53,27 +54,23 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
     }
     
     private void loadImages() {
-    try {
-        // Replace these with your actual image files
-        playerImage = ImageIO.read(getClass().getResource("/sprites/player.png"));
-        enemyImage = ImageIO.read(getClass().getResource("/sprites/enemy.png"));
-        coinImage = ImageIO.read(getClass().getResource("/sprites/coin.png"));
-        goalImage = ImageIO.read(getClass().getResource("/sprites/goal.png"));
-        platformImage = ImageIO.read(getClass().getResource("/sprites/platform.png"));
-        
-        // Scale images if needed
-        playerImage = playerImage.getScaledInstance(PLAYER_SIZE, PLAYER_SIZE, Image.SCALE_SMOOTH);
-        coinImage = coinImage.getScaledInstance(20, 20, Image.SCALE_SMOOTH);
-    } catch (IOException e) {
-        e.printStackTrace();
-        // Fallback to colored rectangles if images fail to load
-        playerImage = createColoredImage(Color.RED, PLAYER_SIZE, PLAYER_SIZE);
-        enemyImage = createColoredImage(Color.BLACK, PLAYER_SIZE, PLAYER_SIZE);
-        coinImage = createColoredImage(Color.YELLOW, 20, 20);
-        goalImage = createColoredImage(Color.MAGENTA, 40, 60);
-        platformImage = createColoredImage(new Color(34, 139, 34), 100, 20);
+        try {
+            // Load sprite images (replace with your actual files)
+            playerImage = ImageIO.read(getClass().getResource("/sprites/player.png"));
+            enemyImage = ImageIO.read(getClass().getResource("/sprites/enemy.png"));
+            coinImage = ImageIO.read(getClass().getResource("/sprites/coin.png"));
+            goalImage = ImageIO.read(getClass().getResource("/sprites/goal.png"));
+            platformImage = ImageIO.read(getClass().getResource("/sprites/platform.png"));
+        } catch (IOException e) {
+            e.printStackTrace();
+            // Fallback to colored rectangles
+            playerImage = createColoredImage(Color.RED, PLAYER_SIZE, PLAYER_SIZE);
+            enemyImage = createColoredImage(Color.BLACK, PLAYER_SIZE, PLAYER_SIZE);
+            coinImage = createColoredImage(Color.YELLOW, 20, 20);
+            goalImage = createColoredImage(Color.MAGENTA, 40, 60);
+            platformImage = createColoredImage(new Color(34, 139, 34), 100, 20);
+        }
     }
-}
     
     private Image createColoredImage(Color color, int width, int height) {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -86,85 +83,62 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
     
     private void loadSounds() {
         try {
-            // Simple beeps - replace with actual sound files in a real game
+            // Load sound files (replace with your actual files)
             jumpSound = AudioSystem.getClip();
-            coinSound = AudioSystem.getClip();
-            winSound = AudioSystem.getClip();
-            gameOverSound = AudioSystem.getClip();
+            jumpSound.open(AudioSystem.getAudioInputStream(getClass().getResource("/sounds/jump.wav")));
             
-            // In a real game, you would load actual sound files:
-            // jumpSound = AudioSystem.getClip();
-            // jumpSound.open(AudioSystem.getAudioInputStream(new File("jump.wav")));
+            coinSound = AudioSystem.getClip();
+            coinSound.open(AudioSystem.getAudioInputStream(getClass().getResource("/sounds/coin.wav")));
+            
+            winSound = AudioSystem.getClip();
+            winSound.open(AudioSystem.getAudioInputStream(getClass().getResource("/sounds/win.wav")));
+            
+            gameOverSound = AudioSystem.getClip();
+            gameOverSound.open(AudioSystem.getAudioInputStream(getClass().getResource("/sounds/gameover.wav")));
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Error loading sounds: " + e.getMessage());
         }
     }
     
     private void initLevel(int level) {
-        player = new Player(100, 100, PLAYER_SIZE, PLAYER_SIZE);
+        // Create player
+        player = new Player(100, 100, PLAYER_SIZE, PLAYER_SIZE, playerImage);
+        
+        // Initialize object lists
         platforms = new ArrayList<>();
         enemies = new ArrayList<>();
         coins = new ArrayList<>();
         
-        // Common ground
+        // Common ground platform
         platforms.add(new Platform(0, HEIGHT - 40, WIDTH, 40, platformImage));
         
-        // Level-specific elements
+        // Level-specific design
         switch (level) {
             case 1:
+                // Platforms
                 platforms.add(new Platform(200, 450, 100, 20, platformImage));
                 platforms.add(new Platform(400, 350, 100, 20, platformImage));
                 platforms.add(new Platform(600, 250, 100, 20, platformImage));
                 
+                // Enemies
                 enemies.add(new Enemy(300, HEIGHT - 40 - PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE, enemyImage, 250, 400));
                 enemies.add(new Enemy(500, 250 - PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE, enemyImage, 450, 550));
                 
+                // Coins
                 coins.add(new Coin(250, 400, 20, 20, coinImage));
                 coins.add(new Coin(450, 300, 20, 20, coinImage));
                 coins.add(new Coin(650, 200, 20, 20, coinImage));
                 
+                // Goal
                 goal = new Goal(700, HEIGHT - 40 - 60, 40, 60, goalImage);
                 break;
                 
             case 2:
-                platforms.add(new Platform(150, 500, 80, 20, platformImage));
-                platforms.add(new Platform(300, 400, 80, 20, platformImage));
-                platforms.add(new Platform(450, 300, 80, 20, platformImage));
-                platforms.add(new Platform(600, 400, 80, 20, platformImage));
-                
-                enemies.add(new Enemy(200, 500 - PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE, enemyImage, 150, 250));
-                enemies.add(new Enemy(400, 300 - PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE, enemyImage, 350, 450));
-                enemies.add(new Enemy(550, 400 - PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE, enemyImage, 500, 600));
-                
-                for (int i = 0; i < 8; i++) {
-                    coins.add(new Coin(100 + i * 80, HEIGHT - 100, 20, 20, coinImage));
-                }
-                
-                goal = new Goal(700, HEIGHT - 40 - 60, 40, 60, goalImage);
+                // More challenging level...
                 break;
                 
             case 3:
-                // More challenging level
-                platforms.add(new Platform(100, 500, 60, 20, platformImage));
-                platforms.add(new Platform(250, 450, 60, 20, platformImage));
-                platforms.add(new Platform(400, 400, 60, 20, platformImage));
-                platforms.add(new Platform(550, 350, 60, 20, platformImage));
-                platforms.add(new Platform(700, 300, 60, 20, platformImage));
-                platforms.add(new Platform(400, 200, 60, 20, platformImage));
-                
-                enemies.add(new Enemy(150, 500 - PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE, enemyImage, 100, 200));
-                enemies.add(new Enemy(300, 450 - PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE, enemyImage, 250, 350));
-                enemies.add(new Enemy(450, 400 - PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE, enemyImage, 400, 500));
-                enemies.add(new Enemy(600, 350 - PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE, enemyImage, 550, 650));
-                enemies.add(new Enemy(750, 300 - PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE, enemyImage, 700, 800));
-                
-                for (int i = 0; i < 15; i++) {
-                    int x = 50 + i * 50;
-                    int y = HEIGHT - 100 - (i % 3) * 50;
-                    coins.add(new Coin(x, y, 20, 20, coinImage));
-                }
-                
-                goal = new Goal(400, 140, 40, 60, goalImage);
+                // Even more challenging level...
                 break;
         }
         
@@ -197,33 +171,41 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
         g.drawString("Score: " + score, 20, 30);
         g.drawString("Level: " + currentLevel, 20, 60);
         
+        // Game over/level complete screens
         if (gameOver) {
-            g.setColor(new Color(0, 0, 0, 150));
-            g.fillRect(0, 0, WIDTH, HEIGHT);
-            g.setColor(Color.WHITE);
-            g.setFont(new Font("Arial", Font.BOLD, 48));
-            g.drawString("GAME OVER", WIDTH/2 - 120, HEIGHT/2 - 30);
-            g.setFont(new Font("Arial", Font.PLAIN, 24));
-            g.drawString("Final Score: " + score, WIDTH/2 - 80, HEIGHT/2 + 20);
-            g.drawString("Press R to Restart", WIDTH/2 - 100, HEIGHT/2 + 60);
-        }
-        
-        if (levelComplete) {
-            g.setColor(new Color(0, 0, 0, 150));
-            g.fillRect(0, 0, WIDTH, HEIGHT);
-            g.setColor(Color.WHITE);
-            g.setFont(new Font("Arial", Font.BOLD, 48));
-            g.drawString("LEVEL COMPLETE!", WIDTH/2 - 180, HEIGHT/2 - 30);
-            g.setFont(new Font("Arial", Font.PLAIN, 24));
-            g.drawString("Score: " + score, WIDTH/2 - 50, HEIGHT/2 + 20);
-            
+            drawCenteredScreen(g, "GAME OVER", "Final Score: " + score, "Press R to Restart");
+        } else if (levelComplete) {
             if (currentLevel < 3) {
-                g.drawString("Press N for Next Level", WIDTH/2 - 120, HEIGHT/2 + 60);
+                drawCenteredScreen(g, "LEVEL COMPLETE!", "Score: " + score, "Press N for Next Level");
             } else {
-                g.drawString("You've completed all levels!", WIDTH/2 - 180, HEIGHT/2 + 60);
-                g.drawString("Press R to Restart", WIDTH/2 - 100, HEIGHT/2 + 100);
+                drawCenteredScreen(g, "YOU WIN!", "Final Score: " + score, "Press R to Restart");
             }
         }
+    }
+    
+    private void drawCenteredScreen(Graphics g, String title, String subtitle, String instruction) {
+        Graphics2D g2d = (Graphics2D) g;
+        
+        // Semi-transparent overlay
+        g2d.setColor(new Color(0, 0, 0, 150));
+        g2d.fillRect(0, 0, WIDTH, HEIGHT);
+        
+        // Title
+        g2d.setColor(Color.WHITE);
+        g2d.setFont(new Font("Arial", Font.BOLD, 48));
+        FontMetrics fm = g2d.getFontMetrics();
+        int titleWidth = fm.stringWidth(title);
+        g2d.drawString(title, WIDTH/2 - titleWidth/2, HEIGHT/2 - 30);
+        
+        // Subtitle
+        g2d.setFont(new Font("Arial", Font.PLAIN, 24));
+        fm = g2d.getFontMetrics();
+        int subWidth = fm.stringWidth(subtitle);
+        g2d.drawString(subtitle, WIDTH/2 - subWidth/2, HEIGHT/2 + 20);
+        
+        // Instruction
+        int instWidth = fm.stringWidth(instruction);
+        g2d.drawString(instruction, WIDTH/2 - instWidth/2, HEIGHT/2 + 60);
     }
     
     @Override
@@ -246,9 +228,10 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
             // Check coin collection
             for (int i = coins.size() - 1; i >= 0; i--) {
                 Coin coin = coins.get(i);
-                if (player.getBounds().intersects(coin.getBounds())) {
+                if (!coin.isCollected() && player.getBounds().intersects(coin.getBounds())) {
+                    coin.collect();
                     coins.remove(i);
-                    score += 10;
+                    score += coin.getValue();
                     playSound(coinSound);
                 }
             }
@@ -329,130 +312,6 @@ public class EnhancedPlatformer extends JPanel implements ActionListener, KeyLis
     
     @Override
     public void keyTyped(KeyEvent e) {}
-    
-    // Game object classes
-    class GameObject {
-        protected int x, y, width, height;
-        protected Image image;
-        
-        public GameObject(int x, int y, int width, int height, Image image) {
-            this.x = x;
-            this.y = y;
-            this.width = width;
-            this.height = height;
-            this.image = image;
-        }
-        
-        public Rectangle getBounds() {
-            return new Rectangle(x, y, width, height);
-        }
-        
-        public void draw(Graphics g) {
-            g.drawImage(image, x, y, width, height, null);
-        }
-    }
-    
-    class Player extends GameObject {
-        private int velocityY = 0;
-        private boolean isOnGround = false;
-        private boolean movingLeft = false;
-        private boolean movingRight = false;
-        
-        public Player(int x, int y, int width, int height) {
-            super(x, y, width, height, playerImage);
-        }
-        
-        public void update(ArrayList<Platform> platforms) {
-            // Horizontal movement
-            if (movingLeft) x -= MOVE_SPEED;
-            if (movingRight) x += MOVE_SPEED;
-            
-            // Apply gravity
-            velocityY += GRAVITY;
-            y += velocityY;
-            
-            // Check collisions with platforms
-            isOnGround = false;
-            Rectangle playerBounds = getBounds();
-            
-            for (Platform platform : platforms) {
-                if (playerBounds.intersects(platform.getBounds())) {
-                    // Land on top of platform
-                    if (velocityY > 0 && y + height <= platform.y + 10) {
-                        y = platform.y - height;
-                        velocityY = 0;
-                        isOnGround = true;
-                    }
-                }
-            }
-            
-            // Keep player in bounds
-            if (x < 0) x = 0;
-            if (x > WIDTH - width) x = WIDTH - width;
-            if (y > HEIGHT - height) {
-                y = HEIGHT - height;
-                velocityY = 0;
-                isOnGround = true;
-            }
-        }
-        
-        public void jump() {
-            if (isOnGround) {
-                velocityY = -JUMP_STRENGTH;
-                isOnGround = false;
-            }
-        }
-        
-        public boolean isOnGround() {
-            return isOnGround;
-        }
-        
-        public void setMovingLeft(boolean movingLeft) {
-            this.movingLeft = movingLeft;
-        }
-        
-        public void setMovingRight(boolean movingRight) {
-            this.movingRight = movingRight;
-        }
-    }
-    
-    class Platform extends GameObject {
-        public Platform(int x, int y, int width, int height, Image image) {
-            super(x, y, width, height, image);
-        }
-    }
-    
-    class Enemy extends GameObject {
-        private int moveSpeed = 2;
-        private int leftBound, rightBound;
-        
-        public Enemy(int x, int y, int width, int height, Image image, int leftBound, int rightBound) {
-            super(x, y, width, height, image);
-            this.leftBound = leftBound;
-            this.rightBound = rightBound;
-        }
-        
-        public void update() {
-            x += moveSpeed;
-            
-            // Reverse direction at bounds
-            if (x <= leftBound || x + width >= rightBound) {
-                moveSpeed *= -1;
-            }
-        }
-    }
-    
-    class Coin extends GameObject {
-        public Coin(int x, int y, int width, int height, Image image) {
-            super(x, y, width, height, image);
-        }
-    }
-    
-    class Goal extends GameObject {
-        public Goal(int x, int y, int width, int height, Image image) {
-            super(x, y, width, height, image);
-        }
-    }
     
     public static void main(String[] args) {
         JFrame frame = new JFrame("Enhanced Platformer");
